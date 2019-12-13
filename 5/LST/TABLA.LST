@@ -1,0 +1,228 @@
+  Tue May 14 2019 18:38                                                                                                  Page    1
+
+
+
+
+
+
+
+               2500 A.D. 8085 Macro Assembler  -  Version 4.03b
+               ------------------------------------------------
+
+                       Input  Filename : V.ASM
+                       Output Filename : V.obj
+
+
+    1                         		;Autores: Jorge Ruiz Gómez & Pablo Sagredo Abad | (203)
+    2                         		;Fecha:	08/05/19	- Versión 2.0
+    3                         		;Versión:
+    4                         		;	1.0: Multiplicación funcional con el resultado en la posición 1203H
+    5                         		;	2.0 Bucle tabla multiplicación
+    6                         		;	
+    7                         		;		Cambios: sustituido cualquier otro uso del par HL que no fuese para incremen
+                                tar la dirección de memoria donde se guarda el resultado
+    8                         		;				Todo el programa trabaja sobre las direcciones de memoria 13
+                                00H+ para poder guardar los datos en la 1201H+
+    9                         		;				El programa ahora se ejecuta en 1300H+
+   10                         		;
+   11                         		;
+   12                         		;		Añadido: Un nuevo bucle que controla la tabla
+   13                         		;				Incremento del PAR HL para poder almacenar los datos
+   14                         		;				Incremento del operando 2 para calcular la tabla
+   15                         		;
+   16                         		;		*Funcional en el equipo entrenador*
+   17                         		;
+   18                         		;-------------------------------------------------------------------------------------------
+                                -----------
+   19                         		;
+   20                         		;	Instrucciones: Introduzca los valores a multiplicar en las instrucciones MVI M,X del
+                                 bloque de entrada, 
+   21                         		;			sustituyendo por un número.
+   22                         		;			
+   23                         		;			Anule la instrucción MVI con un ; antes del compilado (O tras este m
+                                odificando los valores de memoria)
+   24                         		;			para introducir los datos mediante teclado en las posiciones 1200H y
+                                 1201H
+   25                         		;
+   26                         		;
+   27                         		;-------------------------------------------------------------------------------------------
+                                -----------
+   28                         		;	
+   29                         		;	Direcciones:
+   30                         		;	1200H 		Operando1/Entrada
+   31                         		;
+   32                         		;	1201-12xxh 	Resultado de la tabla
+   33                         		;
+   34                         		;	1301H		Operando 2 (Por defecto 1, es el número inicial con el que comienza 
+                                la tabla)
+   35                         		;	
+   36                         		;	1302H:		Dirección temporal de almacenamiento del desplazamiento a la derecha
+                                 del Operando 2 para saber el carry/tipo de salto a ejecutar
+   37                         		;
+   38                         		;	1303H:		Resultado + almacenamiento temporal del resultado
+  Tue May 14 2019 18:38                                                                                                  Page    2
+
+
+
+
+   39                         		;
+   40                         		;	1304H:		Ciclos del bucle multriplicación
+   41                         		;
+   42                         		;	1305H:		Dirección temporal para almacenar el desplazamiento del Operando 1 a
+                                 la izquierda (1200H)
+   43                         		;
+   44                         		;	1306h		Contador tabla
+   45                         		;	
+   46                         		;	1307		Par de registros con la posición del resultado de la tabla
+   47                         		;
+   48                         		;-------------------------------------------------------------------------------------------
+                                -----------
+   49                         		;Programa
+   50                         	
+   51  1000                   		.ORG 1000H		;Dirección de memoria inicial (.ORG para simulador y ORG ensamblador
+                                )
+   52                         	
+   53                         	;entrada---------------------------------------------------------------------------------
+   54                         	
+   55  1000   21 00 12        		LXI H,1200H		;Dirección de entrada del número del que queremos la tabla.
+   56  1003   36 01           		MVI M,1H     	;Número a introducir en la dirección anterior en BCD
+   57                         	
+   58  1005   21 01 13        		LXI H,1301H 	;Multiplicando con el que queremos iniciar la tabla
+   59  1008   36 01           		MVI M,1H    	;Número a introducir en la dirección anterior en BCD
+   60  100A                   		
+   61                         	;FinEntrada------------------------------------------------------------------------------
+   62                         	;Ejecución inicial------
+   63                         	
+   64  100A   21 00 12        		LXI H,1200H		;Dirección de memoria -1 en la que queremos guardar los resultados (
+                                1200H los guardará a partir de 1201H)
+   65                         					;Cargamos el par de registros HL con la dirección que vamos a usar p
+                                ara aumentar 1 cada vez y se guarda el resultado
+   66                         	
+   67                         		;	nº Ciclos de la TABLA		
+   68  100D   3E 09           		MVI A,9			;Carga el número de ciclos DE LA TABLA al acumulador 
+   69  100F   32 06 13        		STA 1306H		;Dirección de almacenamiento del contador de ciclo/bucle
+   70                         	
+   71  1012                   	INIC:
+   72                         		;LDA 1304H		;Carga el número de ciclos de multiplicación al acumulador
+   73  1012   3E 05           		MVI A,5H		;Dirección de almacenamiento del contador de ciclo/bucle 
+   74  1014   32 04 13        		STA 1304H
+   75  1017                   			
+   76  1017   3E 00           		MVI A,0  
+   77  1019   32 03 13        		STA 1303H		;Elimina valores basura en 1203 para poder sumar correctamente los v
+                                alores
+   78                         	
+   79                         	;Como estamos reutilizando la P5, los valores se introducen en otras posiciones de memoria, y luego 
+                                se copian y pegan para
+   80                         	;	mantener los originales dureante el desplazamiento
+   81                         	
+   82  101C   3A 01 13        		LDA 1301H 
+   83  101F   32 02 13        		STA 1302H		;Crea una copia de 1200H y la guarda en 1203H. 
+   84                         					;Aquí vamos a almacenar el número cada vez que lo dividimos entre 2/
+                                desplazamos derecha
+   85                         	
+   86  1022   3A 00 12        		LDA 1200H		;Crea una copia del primer valor
+   87  1025   32 05 13        		STA 1305H		;Esta la vamos a usar para sumarla al valor original (1200h), pero e
+                                sta va a ser multiplicada x2 cada ciclo de all
+  Tue May 14 2019 18:38                                                                                                  Page    3
+
+
+
+
+   88                         	
+   89                         	;-----------------------------------------------------------------------------------
+   90                         	
+   91                         	;ALL: Desplazamiento lateral del operando 2, y sentencia alternativa si el bit de acarreo es 1 o 0
+   92  1028   3A 02 13        	ALL:	LDA 1302H 	;Carga el primer número al acumulador
+   93  102B   0F              		RRC		;Rota el programa para cargar el bit de la derecha del acumulador en el acar
+                                reo
+   94  102C   32 02 13        		STA 1302H 	;Guarda el acumulador una vez rotado
+   95                         	
+   96  102F   D2 43 10        		JNC CONT	;Si el bit en Carry es 0 ejecutamos el código de CERO
+   97  1032   C3 35 10        		JMP CUNO	;Si el bit en el Carry es 1, el programa salta a CUNO
+   98                         	
+   99                         	;-----------------------------------------------------------------------------------
+  100                         	;CUNO: Si el flag del acarreo está encendido, suma al valor de 1203H uno de los desplazamientos del 
+                                Operando 1
+  101                         	
+  102  1035                   	CUNO:
+  103  1035   3A 03 13        		LDA 1303H 	;Carga de nuevo el número a operar en el acumulador.
+  104  1038   47              		MOV B,A		
+  105  1039   3A 05 13        		LDA 1305H
+  106  103C   80              		ADD B
+  107  103D   32 03 13        		STA 1303H 	;Guarda en 1203H el resultado actual
+  108  1040   C3 43 10        		JMP CONT
+  109                         	
+  110                         	;-----------------------------------------------------------------------------------
+  111                         	;Función Contador, repite el proceso x veces (X = 1204H) + Desplazamiento lateral del operando 2
+  112                         	
+  113  1043                   	CONT:
+  114  1043   3A 05 13        		LDA 1305H	;
+  115  1046   07              		RLC		;Desplazamiento lateral a la derecha del operando 2, valor temporal en 1205H
+                                
+  116  1047   32 05 13        		STA 1305H	;
+  117                         	
+  118  104A   3A 04 13        		LDA 1304H
+  119  104D   3D              		DCR A		;Decrementa en 1 el número
+  120  104E   FE 00           		CPI 00		;Compara el resultado del acumulador con un número X (CPI XX)
+  121  1050   32 04 13        		STA 1304H	
+  122                         	
+  123  1053   C2 28 10        		JNZ ALL
+  124                         				;Hasta que el número de ciclos final no sea 0, el programa no para (Vuelve a
+                                 ALL)
+  125                         	
+  126                         	
+  127                         	;----------------------------------------------------------------------------------------
+  128                         	;	Tabla, bucle que repite la multiplicación:
+  129                         			;Una vez que obtenemos el resultado de la operación, realizamos los siguientes pasos
+                                
+  130  1056                   			
+  131                         	
+  132  1056                   	TABLA:
+  133                         		;AUMENTO DEL OPERANDO 2
+  134                         			;Aumentamos el operando 2 en una unidad para poder multiplicarlo de nuevo en la tabl
+                                a
+  135  1056   3A 01 13        		LDA 1301H 	;Dirección de memoria donde se encuentra el segundo número
+  136  1059   3C              		INR A		;Incremento del operando
+  137  105A   32 01 13        		STA 1301H   ;Guardamos el incremento
+  138                         	
+  Tue May 14 2019 18:38                                                                                                  Page    4
+
+
+
+
+  139                         	;-------------------	
+  140                         		;Posiciones de los resultados individuales de la multiplicación
+  141                         		;Esta función incrementa en 1 la dirección donde guardamos el resultado para mostrar la tabl
+                                a de forma consecutiva
+  142  105D                   		
+  143  105D   3A 03 13        		LDA 1303H	;Cargamos el resultado obtenido en la multiplicación
+  144  1060   23              		INX H
+  145  1061   77              		MOV M,A		;Lo guardamos en la dirección que tiene el par HL
+  146                         	
+  147                         		;-----------Control de flujo de la tabla (BUCLE)
+  148                         		;Como cualquier otro bucle, aquí comparamos que una vez se ejecute la función TABLA dir1306H
+                                 veces, se detenga la ejecución
+  149  1062                   		
+  150  1062   3A 06 13        		LDA 1306H	;Carga de la dirección 1306H el número de ciclos
+  151  1065   3D              		DCR A		;Decrementa en 1 el número de ciclos
+  152  1066   FE 00           		CPI 00		;Compara el resultado del acumulador con un número X (CPI XX)
+  153  1068   32 06 13        		STA 1306H	;Guarda el número de ciclos actual
+  154  106B   C2 12 10        		JNZ INIC	;Si el número de ciclos = 0 (Bit A activado), continua la ejecución a FIN, s
+                                i no salta a INIC:
+  155                         	
+  156                         		;-----------FIN BUCLE TABLA
+  157  106E                   		
+  158                         	;----Fin programa:
+  159                         		;Fin de ejecución (Simulador)
+  160  106E   76              		HLT
+  161                         	
+  162                         		;Fin de ejecución (Ensamblador)
+  163                         		;RST 1
+  164                         		;END
+
+
+
+           Lines Assembled :  164             Assembly Errors :  0
+
+
+

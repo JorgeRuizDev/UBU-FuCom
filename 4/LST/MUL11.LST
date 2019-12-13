@@ -1,0 +1,162 @@
+  Thu May  9 2019 19:55                                                                                                  Page    1
+
+
+
+
+
+
+
+               2500 A.D. 8085 Macro Assembler  -  Version 4.03b
+               ------------------------------------------------
+
+                       Input  Filename : MUL11.asm
+                       Output Filename : MUL11.obj
+
+
+    1                         		;Autores: Jorge Ruiz Gómez & Pablo Sagredo Abad | (203)
+    2                         		;Fecha:	09/04/19
+    3                         		;Versión:
+    4                         		;	1.0: Multiplicación funcional con 13 y 3, dando el resultado en hexadecimal en la po
+                                sición 1203H
+    5                         		;		Funciona con valores de 7 bits, si el número de ciclos del bucle es 8 y el r
+                                esultado
+    6                         		;			no es mayor a 8 bits
+    7                         		;
+    8                         		;	1.1: Ahora se intercambian los valores de la 1202h y 1203h
+    9                         		;
+   10                         		;
+   11                         		;-------------------------------------------------------------------------------------------
+                                -----------
+   12                         		;
+   13                         		;	Instrucciones: Introduzca los valores a multiplicar en las instrucciones MVI M,X del
+                                 bloque de entrada, 
+   14                         		;			sustituyendo por un número.
+   15                         		;			
+   16                         		;			Anule la instrucción MVI con un ; antes del compilado (O tras este m
+                                odificando los valores de memoria)
+   17                         		;			para introducir los datos mediante teclado en las posiciones 1200H y
+                                 1201H
+   18                         		;
+   19                         		;
+   20                         		;-------------------------------------------------------------------------------------------
+                                -----------
+   21                         		;	
+   22                         		;	Direcciones:
+   23                         		;	1200H y 1201H:	Operandos
+   24                         		;	
+   25                         		;	1202H:		Dirección temporal de almacenamiento del desplazamiento a la derecha
+                                 del Operando 2 para saber el carry/tipo de salto a ejecutar
+   26                         		;				Fin de ejecución: Resultado
+   27                         		;
+   28                         		;	1203H:		Almacenamiento temporal del resultado
+   29                         		;				Fin de ejecución: Estado final del desplazamiento del operan
+                                do 2
+   30                         		;	
+   31                         		;	1204H:		Ciclos del bucle
+   32                         		;
+   33                         		;	1205H:		Dirección temporal para almacenar el desplazamiento del Operando 1 (
+                                1200H)
+   34                         		;
+   35                         		;-------------------------------------------------------------------------------------------
+                                -----------
+   36                         		;Programa
+  Thu May  9 2019 19:55                                                                                                  Page    2
+
+
+
+
+   37                         	
+   38  1000                   		.ORG 1000H		;Dirección de memoria inicial (.ORG para simulador y ORG ensamblador
+                                )
+   39                         	
+   40                         	;entrada---------------------------------------------------------------------------------
+   41                         	
+   42  1000   21 00 12        		LXI H,1200H	;Dirección de memoria donde se encuentra el primer número
+   43  1003   36 0D           		MVI M,13     	;Número a introducir en la dirección anterior en BCD
+   44                         	
+   45  1005   21 01 12        		LXI H,1201H 	;Dirección de memoria donde se encuentra el segundo número
+   46  1008   36 03           		MVI M,3    	;Número a introducir en la dirección anterior en BCD
+   47                         	
+   48                         	;FinEntrada------------------------------------------------------------------------------
+   49                         	
+   50  100A   21 04 12        		LXI H,1204H		;Carga el número de ciclos al acumulador
+   51  100D   36 05           		MVI M,5H		;Dirección de almacenamiento del contador de ciclo/bucle 
+   52                         	
+   53  100F   21 03 12        		LXI H,1203H 		;Elimina valores basura en 1203 para poder sumar correctamente los v
+                                alores
+   54  1012   36 00           		MVI M,0  
+   55                         	
+   56                         	;Copias de datos para mantener los originales
+   57  1014   3A 01 12        		LDA 1201H 
+   58  1017   32 02 12        		STA 1202H		;Crea una copia de 1200H y la guarda en 1203H. 
+   59                         					;Aquí vamos a almacenar el número cada vez que lo dividimos entre 2/
+                                desplazamos derecha
+   60                         	
+   61  101A   3A 00 12        		LDA 1200H		;Crea una copia del primer valor
+   62  101D   32 05 12        		STA 1205H		;Esta la vamos a usar para sumarla al valor original (1200h), pero e
+                                sta va a ser multiplicada x2 cada ciclo de all
+   63                         	
+   64                         	
+   65                         	;-----------------------------------------------------------------------------------
+   66                         	;ALL: Desplazamiento lateral del operando 2, y sentencia alternativa si el bit de acarreo es 1 o 0
+   67                         	
+   68  1020   3A 02 12        	ALL:	LDA 1202H 	;Carga el primer número al acumulador
+   69  1023   0F              		RRC		;Rota el programa para cargar el bit de la derecha del acumulador en el acar
+                                reo
+   70  1024   32 02 12        		STA 1202H 	;Guarda el acumulador una vez rotado
+   71                         	
+   72  1027   D2 3A 10        		JNC CONT	;Si el bit en Carry es 0 ejecutamos el código de CERO
+   73  102A   C3 2D 10        		JMP CUNO	;Si el bit en el Carry es 1, el programa salta a CUNO
+   74                         	
+   75                         	;-----------------------------------------------------------------------------------
+   76                         	;CUNO: Si el flag del acarreo está encendido, suma al valor de 1203H uno de los desplazamientos del 
+                                Operando 1
+   77                         	
+   78  102D   3A 03 12        	CUNO:	LDA 1203H 	;Carga de nuevo el número a operar en el acumulador.
+   79  1030   21 05 12        		LXI H,1205H
+   80  1033   86              		ADD M
+   81  1034   32 03 12        		STA 1203H 	;Guarda en 1203H el resultado actual
+   82  1037   C3 3A 10        		JMP CONT
+   83                         	
+   84                         	;-----------------------------------------------------------------------------------
+   85                         	;Función Contador, repite el proceso x veces (X = 1204H) + Desplazamiento lateral del operando 2
+   86                         	
+   87  103A   3A 05 12        	CONT:	LDA 1205H	;
+  Thu May  9 2019 19:55                                                                                                  Page    3
+
+
+
+
+   88  103D   07              		RLC		;Desplazamiento lateral a la derecha del operando 2, valor temporal en 1205H
+                                
+   89  103E   32 05 12        		STA 1205H	;
+   90                         	
+   91  1041   3A 04 12        		LDA 1204H
+   92  1044   3D              		DCR A		;Decrementa en 1 el número
+   93  1045   FE 00           		CPI 00		;Compara el resultado del acumulador con un número X (CPI XX)
+   94  1047   32 04 12        		STA 1204H	
+   95                         	
+   96  104A   C2 20 10        		JNZ ALL		;Hasta que el número de ciclos final no sea 0, el programa no para (Vuelve a
+                                 ALL)
+   97                         	
+   98  104D   3A 03 12        		LDA 1203H
+   99  1050   47              		MOV B,A
+  100  1051   3A 02 12        		LDA 1202H
+  101  1054   32 03 12        		STA 1203H
+  102  1057   78              		MOV A,B
+  103  1058   32 02 12        		STA 1202H
+  104                         	
+  105                         	
+  106                         		;Fin de ejecución (Simulador)
+  107  105B   76              		HLT
+  108                         	
+  109                         		;Fin de ejecución (Ensamblador)
+  110                         		;RST 1
+  111                         		;END
+
+
+
+           Lines Assembled :  111             Assembly Errors :  0
+
+
+

@@ -1,0 +1,101 @@
+  Thu Mar 28 2019 19:41                                                                                                  Page    1
+
+
+
+
+
+
+
+               2500 A.D. 8085 Macro Assembler  -  Version 4.03b
+               ------------------------------------------------
+
+                       Input  Filename : sumafin.asm
+                       Output Filename : sumafin.obj
+
+
+    1                         		;Autores: Pablo Sagredo, Jorge Ruiz (203)
+    2                         		;Date: 13/03/19
+    3                         		;-------------------------------------------------------------------------------------------
+                                ---------------------------------------------------
+    4                         		;Versión 1.1
+    5                         		;Suma funcional de dos números de 8 bits previa carga en memoria
+    6                         		;Pruebas y Cambios:
+    7                         		;	Versión 1.0a
+    8                         		;	Se comprueba que se pueden sumar dos números, cargándolos previamente a un registro.
+                                
+    9                         		;	
+   10                         		;	Problemas:
+   11                         		;		-Únicamente probado su funcionamiento en el Simulador x8085
+   12                         		;		-No cargan valores desde memoria
+   13                         		;		-No hay ajuste a BCD
+   14                         		;		-El código no está ajustado al compilador, por lo que si intentamos ensambla
+                                rlo nos dará error
+   15                         		;	Versión 1.0
+   16                         		;	Se introducen los datos en memoria y luego se cargan a los registros.
+   17                         		;	
+   18                         		;	Otros cambios:
+   19                         		;		-Añadido ajuste en BCD antes del volcado del acumulador en una dirección de 
+                                memoria
+   20                         		;		-Probado y modificado en el equipo entrenador en modo local y remoto
+   21                         		;
+   22                         		;	Versión 1.1
+   23                         		;		-Añadidas instrucciones de uso en la cabecera
+   24                         		;				
+   25                         		;	
+   26                         		;Ensamblado y enlazado con las herramientas x8085 del procesador i8085
+   27                         		;-------------------------------------------------------------------------------------------
+                                --------------------------------------------------
+   28                         		;
+   29                         		;								[Instrucciones]
+   30                         		;						Direcciones de entrada: 1200H y 1201H
+   31                         		;	Introduzca las cifas en modo Hexadecimal sin conversión, es decir, si quiere sumar 1
+                                5 + 15, introduzca 15H+15H, no F+F
+   32                         		;					
+   33                         		;					Direcciones de salida: 1202H y 1203H, la cifra es co
+                                ntínua
+   34                         		;					
+   35                         		;
+   36                         		;		Nota: Intente sumar números cuyo resultado sea menor a 99, ya que con nuestr
+                                os conocimientos actuales no podemos introducir un 1 en 1202H sin saltos
+   37                         		;						(Si el carry = 1, añadir 1 a 1202H)
+   38                         		;
+   39                         		;-------------------------------------------------------------------------------------------
+                                ---------------------------------------------------
+  Thu Mar 28 2019 19:41                                                                                                  Page    2
+
+
+
+
+   40                         	
+   41                         		;Inicio/Cuerpo
+   42  1000                   		ORG 1000H		;Dirección de memoria inicial (Añadir un . delante de ORG [.ORG] par
+                                a su correcto funcionamiento en el simulador x8085)
+   43                         	
+   44  1000   21 00 12        		LXI H,1200H		;Carga inmediatamente la direccón 1200H al par de registros H-L
+   45  1003   36 04           		MVI M,4			;Carga un número a la dirección de memoria que se encuentra actualme
+                                nte en el par de registros H-L
+   46  1005   3A 00 12        		LDA 1200H		;Carga el acumulador con el un valor que se encuentra en una direcci
+                                ón de memoria
+   47  1008                   		
+   48  1008   21 01 12        		LXI H,1201H		;Carga inmediatamente la direccón 1201H al par de registros H-L
+   49  100B   36 04           		MVI M,4			;Carga un número a la dirección de memoria que se encuentra actualme
+                                nte en el par de registros H-L
+   50  100D   86              		ADD M			;Suma el valor que se encuentra en la dirección de memoria guardada 
+                                en el par de registros HL al acumulador
+   51                         	
+   52  100E   27              		DAA			;Ajusta el contenido del acumulador a BCD
+   53  100F   32 03 12        		STA 1203H		;Vuelca el contenido del acumulador a la dirección 1203h
+   54  1012                   		
+   55                         		;Fin para el simulador
+   56                         		;HLT			;Para el programa
+   57                         	
+   58                         		;Fin para el equipo ensamblador
+   59  1012   CF              		RST 1
+   60  1013                   		END
+
+
+
+           Lines Assembled :  60             Assembly Errors :  0
+
+
+

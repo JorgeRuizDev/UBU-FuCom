@@ -1,0 +1,94 @@
+  Sun May 12 2019 01:41                                                                                                  Page    1
+
+
+
+
+
+
+
+               2500 A.D. 8085 Macro Assembler  -  Version 4.03b
+               ------------------------------------------------
+
+                       Input  Filename : 1.asm
+                       Output Filename : 1.obj
+
+
+    1                         		;Autor: Jorge Ruiz Gómez 203
+    2                         		;Fecha: 11/05/2019
+    3                         		;
+    4                         		;Práctica 6
+    5                         		;Descripción: Muestra por pantalla el dato introducido por teclado (número/tecla/...)
+    6                         		;	
+    7                         		;Versión: 1.0
+    8                         		;	Pruebas: No imprime correctamente en el display de 7 segmentos
+    9                         		;			Principalmente porque no tiene suficiente info
+   10                         		;			Y tendríamos que usar el de 15.
+   11                         		;			Además hay que usar una tabla de conversión para
+   12					;	
+   13					;	
+   14					;	Para imprimir números sería necesario introducir una tabla de conv
+   15					;	que carge al acumulador las patillas específicas a mostrar dependiendo
+   16					;	del número, por ejemeplo, si introducimos 2 (32H) se encenderían	
+   14                         		;	00110010 sólo 3 patillas. Tendríamos que cambiar el acumulador a:	
+   15                         		;	3Eh: 00111110 para imprimir un 2, este valor equivale a ">" en ASCII	
+   16                         		;
+   17                         		;	No ha sido probado en el equipo entrenador
+   18                         		;
+   19                         		;----------------------------------------------------------------------------------
+   20                         	
+   21                         	
+   22                         	;Inicio del programa------------------------
+   23                         	
+   24  1000                   		ORG 1000H		;Dirección de inicio (Quitar el punto para compilar)
+   25                         	
+   26                         	;Cuerpo-------------------------------------
+   27                         		;Máscaras		
+   28  1000   3E 08           		MVI A,8			;Bit 3 (MSE) -> Permite programar/modif máscaras
+   29  1002   30              		SIM			;Fija la máscara con el bit del acumulador
+   30                         	
+   31  1003                   	Entrada:
+   32  1003   FB              		EI			;Enable Interruptions: Activa las interrupciones
+   33                         		;RIM			;Carga de nuevo la máscara al acumulador
+   34  1004   C3 03 10        		JMP Entrada		;Bucle de entrada durante el cual introducimos los datos
+   35                         	
+   36                         	;---------------------------------------------
+   37                         	;Rutina RST 5.5
+   38  002C                   		ORG 002Ch
+   39  002C   CD 4E 04        		CALL 044EH
+   40                         	
+   41                         	;044EH
+   42  044E                   		ORG 044EH
+   43  044E   DB 00           		IN 00H		;Por defecto, el teclado incluido en el simulador realiza la entrada de un d
+                                ato en el puerto 00H
+   44                         					;Teniendo esto en cuenta, realizamos una instrucción IN en ese puert
+                                o
+   45                         					;La instrucción IN permite cargar el dato de 00H al acumulador
+  Sun May 12 2019 01:41                                                                                                  Page    2
+
+
+
+
+   46  0450   FE 30           		CPI 30H			;Si el dato es 30H (0 ASCII Hex) salta a FIN
+   47  0452   C2 D5 04        		JNZ 04D5H
+   48  0455   C3 DA 04        		JMP FIN
+   49                         	
+   50                         	
+   51  04D5                   		ORG 04D5H
+   52  04D5   D3 01           		OUT 01H			;Imprime el acumulador a la dirección 01H
+   53  04D7   C3 03 10        		JMP Entrada			;V
+   54                         	
+   55                         	;----------------------------------------------
+   56  04DA                   	FIN:
+   57                         		;Simulador
+   58                         		;HLT
+   59  04DA                   		
+   60                         		;ASM
+   61  04DA   CF              		RST 1
+   62  04DB                   		END
+
+
+
+           Lines Assembled :  62             Assembly Errors :  0
+
+
+

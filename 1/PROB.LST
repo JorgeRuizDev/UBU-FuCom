@@ -1,0 +1,48 @@
+  Wed Feb 13 2019 11:28                                                                                                  Page    1
+
+
+
+
+
+
+
+               2500 A.D. 8085 Macro Assembler  -  Version 4.03b
+               ------------------------------------------------
+
+                       Input  Filename : prob.asm
+                       Output Filename : prob.obj
+
+
+    1                         		;Autor: Jorge Ruiz Gómez (203)	
+    2                         		;Fecha: 13.02.19
+    3                         		;Versión: 1.0
+    4                         		;Pruebas y cambios: Variación de los valores en las instrucciónes MVI (MVI M,X) siendo x otr
+                                o valor en decimal
+    5                         		;Ensamblado y enlazado con las herramientas x8085 y link para el procesador intel 8085 (i808
+                                5)
+    6                         		;	
+    7                         	
+    8                         	
+    9                         		;Inicio/Cuerpo del programa
+   10  1000                   		ORG 1000H		;Instrucción de origen, indica que el programa comienza en la direcc
+                                ión de memoria 1000H	
+   11  1000   21 00 12        		LXI H,1200H		;Instrucción de carga-inmediata, carga directamente en el par de reg
+                                istros especificado (H-L) una dirección de memoria o dato.
+   12  1003   36 03           		MVI M,3			;Instrucción de movimiento inmediato, carga un número (3) en la memo
+                                ria indicada en el par de registros (H-L).
+   13  1005                   					
+   14                         					;Repetición del código para copiar un segundo valor en otra direcció
+                                n
+   15  1005   21 01 12        		LXI H,1201H		
+   16  1008   36 05           		MVI M,5			
+   17                         	
+   18                         		;Fin para ensambaldor
+   19  100A   CF              		RST 1
+   20  100B                   		END
+
+
+
+           Lines Assembled :  20             Assembly Errors :  0
+
+
+

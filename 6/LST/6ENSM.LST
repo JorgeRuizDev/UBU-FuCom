@@ -1,0 +1,113 @@
+  Tue May 14 2019 11:28                                                                                                  Page    1
+
+
+
+
+
+
+
+               2500 A.D. 8085 Macro Assembler  -  Version 4.03b
+               ------------------------------------------------
+
+                       Input  Filename : 6ENSM.asm
+                       Output Filename : 6ENSM.obj
+
+
+    1                         		;
+    2                         		;	Práctica 6 para el u8085	
+    3                         		;	
+    4                         		;Autor: Jorge Ruiz Gómez
+    5                         		;Fecha:	14/05/2019
+    6                         		;
+    7                         		;Descrición: Utiliza las direcciones de memoria reservadas al
+    8                         		;	programa monitor para leer e imprimir el acumulador.
+    9                         		;
+   10                         		;	El programa monitor ya tiene estas subrutinas programadas
+   11                         		;	de serie, por lo que solo es necesario llamarlas.
+   12                         		;	
+   13                         		;	Algunas de estas subrutinas necesitan tener máscaras 
+   14                         		;	concretas y las interrupciones configuradas
+   15                         		;
+   16                         		;	Toda la información ha sido extraida del PDF Práctica 7
+   17                         		;	
+   18                         		;
+   19                         		;
+   20                         		;	El programa no ha sido probado, y sólo debería funcionar
+   21                         		;	con el equipo u8085 de Alcop
+   22                         		;
+   23                         		;	El programa no imprime un número como tal, sino que activa
+   24                         		;	las distintas patillas del display de 7 segmentos, usando el
+   25                         		;	acumulador como interfaz
+   26                         		;
+   27                         		;	Para imprimir números sería necesario introducir una tabla de conv
+   28                         		;	que carge al acumulador las patillas específicas a mostrar dependiendo
+   29                         		;	del número, por ejemeplo, si introducimos 1 (32H) se encenderían
+   30                         		;	00110010 sólo 3 patillas. Tendríamos que cambiar el acumulador a:
+   31                         		;	3Eh: 00111110 para imprimir un 2, este valor equivale a ">" en ASCII		
+   32                         		;
+   33                         		;	
+   34                         		;
+   35                         		;---------------------------------------------------------
+   36                         	
+   37  0000                   		
+   38                         	;	Inicio
+   39  1000                   		ORG 1000H	;(Dirección de inicio, quitar el punto para ensamblar)
+   40                         	
+   41                         	;-------------------------------------------------------------------
+   42                         	;	Cuerpo
+   43                         	
+   44                         		;Primero activamos las interrupciones, y las desenmascaramos
+   45  1000                   		
+   46  1000   3E 08           		MVI A,8H	;Cargamos 8 decimal al acumulador para activar el bit 3
+   47                         				;El bit 3 o bit MSE permite desenmascarar las interrupciones
+  Tue May 14 2019 11:28                                                                                                  Page    2
+
+
+
+
+   48                         				;de tipo hardware (RST x.5)	
+   49                         	
+   50  1002   30              		SIM		;Fijamos la nueva máscara que desenmascara las de tipo HW
+   51  1003                   		
+   52                         	;--------------------------------------------------------------------
+   53                         		;Programa principal
+   54  1003                   	INIC:
+   55  1003   FB              		EI		;Enable Intrrupt, activa las interrupciones
+   56                         		;RIM		;Carga el bit 3 al acumulador(Innecesario creo yo)
+   57                         	
+   58  1004   CD 4E 04        		CALL 044EH	;Este call llama a la subrutina del E.Entrenador que permite
+   59                         				;leer una entrada de teclado
+   60                         				;También llamada RDKBD (Según los apuntes)
+   61                         				;Esta subrutina necesita tener la rutina RST 5.5 Desenmascarada
+   62                         	
+   63  1007   32 01 12        		STA 1201H	;Guardamos el acumulador antes de que se pierda al saltar a estas
+   64                         				;subrutinas
+   65                         	;-------------------------------------------------------
+   66  100A                   		
+   67  100A   3A 01 12        		LDA 1201H	;Cargamos el dato intrdudo al acumulador
+   68  100D   FE 30           		CPI 30H		;Comparamos si es 0 en ASCII H
+   69  100F   C2 15 10        		JNZ Imprim	;No es 0: imprimimos el valor del acumulador
+   70  1012   C3 1E 10        		JMP Fin		;Si es 0: Denemos la ejecución
+   71                         	
+   72  1015                   	Imprim:
+   73  1015   3A B1 04        		LDA 1201	;Volvemos a cargar el acumulador por si este se ha borrado
+   74                         	
+   75  1018   CD D5 04        		CALL 04D5H	;Saltamos a la siguiente dir del Equipo entrenador
+   76                         				;Esta dirección permite imprimir el acumulador
+   77                         				;según los apuntes
+   78                         				;También conocida como UPDDT
+   79                         	
+   80  101B   C3 03 10        		JMP INIC	;Volvemos al inicio del bucle porque no se ha introducido 0
+   81                         	
+   82                         	;------Fin de la ejecución al intrudicir 0-----------------
+   83  101E                   	Fin:	
+   84                         	
+   85  101E   CF              		RST 1
+   86  101F                   		END
+
+
+
+           Lines Assembled :  86             Assembly Errors :  0
+
+
+
